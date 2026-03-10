@@ -1,0 +1,107 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Vela at Home — single-node Docker Compose stack
+# See docs/setup.md before starting.
+
+services:
+
+  # ── Core API server ──────────────────────────────────────────────────────────
+  server:
+    image: ghcr.io/go-vela/server:v0.27.5
+    container_name: vela-server
+    networks: [vela]
+    env_file: .env
+    environment:
+      CACHE_DRIVER: redis
+      CACHE_ADDR: "redis://redis:6379"
+      DATABASE_DRIVER: postgres
+      QUEUE_DRIVER: redis
+      QUEUE_ADDR: "redis://redis:6379"
+      SCM_DRIVER: github
+      SCM_CONTEXT: "continuous-integration/vela"
+      SECRET_VAULT: "false"
+      VELA_LOG_LEVEL: info
+      VELA_USER_REFRESH_TOKEN_DURATION: 90m
+      VELA_USER_ACCESS_TOKEN_DURATION: 60m
+      VELA_WORKER_AUTH_TOKEN_DURATION: 3m
+      VELA_DISABLE_WEBHOOK_VALIDATION: "true"
+      VELA_ENABLE_SECURE_COOKIE: "false"
+      VELA_REPO_ALLOWLIST: "*"
+      VELA_SCHEDULE_ALLOWLIST: "*"
+    restart: unless-stopped
+    ports:
+      - "3500:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  # ── Build executor ───────────────────────────────────────────────────────────
+  worker:
+    image: ghcr.io/go-vela/worker:v0.27.3
+    container_name: vela-worker
+    networks: [vela]
+    env_file: .env
+    environment:
+      EXECUTOR_DRIVER: linux
+      QUEUE_DRIVER: redis
+      QUEUE_ADDR: "redis://redis:6379"
+      VELA_BUILD_LIMIT: 2
+      VELA_BUILD_TIMEOUT: 30m
+      VELA_LOG_LEVEL: info
+      VELA_RUNTIME_DRIVER: docker
+      VELA_RUNTIME_PRIVILEGED_IMAGES: "target/vela-docker"
+      VELA_EXECUTOR_ENFORCE_TRUSTED_REPOS: "true"
+      VELA_EXECUTOR_OUTPUTS_IMAGE: "alpine:latest"
+      VELA_SERVER_ADDR: "http://server:8080"
+      WORKER_ADDR: "http://worker:8080"
+      WORKER_CHECK_IN: 2m
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - server
+
+  # ── Web UI ───────────────────────────────────────────────────────────────────
+  ui:
+    image: ghcr.io/go-vela/ui:v0.28.0
+    container_name: vela-ui
+    networks: [vela]
+    env_file: .env
+    restart: unless-stopped
+    ports:
+      - "3501:80"
+    depends_on:
+      - server
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: vela-postgres
+    networks: [vela]
+    environment:
+      POSTGRES_DB: vela
+      POSTGRES_USER: vela
+      POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vela"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Redis ────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: vela-redis
+    networks: [vela]
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  vela:
