@@ -7,7 +7,7 @@ services:
 
   # ── Core API server ──────────────────────────────────────────────────────────
   server:
-    image: ghcr.io/go-vela/server:v0.27.5
+    image: target/vela-server:latest
     container_name: vela-server
     networks: [vela, proxy]
     env_file: .env
@@ -44,7 +44,7 @@ services:
 
   # ── Build executor ───────────────────────────────────────────────────────────
   worker:
-    image: ghcr.io/go-vela/worker:v0.27.3
+    image: target/vela-worker:latest
     container_name: vela-worker
     networks: [vela]
     env_file: .env
@@ -70,10 +70,13 @@ services:
 
   # ── Web UI ───────────────────────────────────────────────────────────────────
   ui:
-    image: ghcr.io/go-vela/ui:v0.28.0
+    image: target/vela-ui:latest
     container_name: vela-ui
     networks: [vela, proxy]
     env_file: .env
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.vela-ui.rule=Host(`vela.prettybird.zapplebee.online`)"
