@@ -11,6 +11,9 @@ services:
     container_name: vela-server
     networks: [vela, proxy]
     env_file: .env
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     environment:
       CACHE_DRIVER: redis
       CACHE_ADDR: "redis://redis:6379"
@@ -48,6 +51,9 @@ services:
     container_name: vela-worker
     networks: [vela]
     env_file: .env
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     environment:
       EXECUTOR_DRIVER: linux
       QUEUE_DRIVER: redis
