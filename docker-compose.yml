@@ -86,6 +86,10 @@ services:
     dns:
       - 8.8.8.8
       - 8.8.4.4
+    entrypoint: ["/bin/sh", "/ui-entrypoint.sh"]
+    volumes:
+      - ./scripts/ui-entrypoint.sh:/ui-entrypoint.sh:ro
+      - ./config/ui-nginx.conf:/ui-nginx.conf:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.vela-ui.rule=Host(`vela.prettybird.zapplebee.online`)"
