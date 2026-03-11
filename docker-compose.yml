@@ -7,7 +7,7 @@ services:
 
   # ── Core API server ──────────────────────────────────────────────────────────
   server:
-    image: target/vela-server:latest
+    image: target/vela-server:v0.27.3
     container_name: vela-server
     networks: [vela, proxy]
     env_file: .env
@@ -28,6 +28,9 @@ services:
       VELA_USER_ACCESS_TOKEN_DURATION: 60m
       VELA_WORKER_AUTH_TOKEN_DURATION: 3m
       VELA_DISABLE_WEBHOOK_VALIDATION: "true"
+      SCM_APP_ID: "${SCM_APP_ID}"
+      SCM_APP_PRIVATE_KEY: "${SCM_APP_PRIVATE_KEY}"
+      SCM_APP_WEBHOOK_SECRET: "${SCM_APP_WEBHOOK_SECRET}"
       VELA_ENABLE_SECURE_COOKIE: "true"
       VELA_REPO_ALLOWLIST: "*"
       VELA_SCHEDULE_ALLOWLIST: "*"
@@ -47,7 +50,7 @@ services:
 
   # ── Build executor ───────────────────────────────────────────────────────────
   worker:
-    image: target/vela-worker:latest
+    image: target/vela-worker:v0.27.3
     container_name: vela-worker
     networks: [vela]
     env_file: .env
@@ -76,7 +79,7 @@ services:
 
   # ── Web UI ───────────────────────────────────────────────────────────────────
   ui:
-    image: target/vela-ui:latest
+    image: target/vela-ui:v0.27.3
     container_name: vela-ui
     networks: [vela, proxy]
     env_file: .env

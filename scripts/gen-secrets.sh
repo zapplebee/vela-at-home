@@ -39,12 +39,15 @@ openssl genpkey -algorithm ed25519 -out "$TMP_KEY" 2>/dev/null
 openssl pkey -in "$TMP_KEY" -pubout -out "$TMP_PUB" 2>/dev/null
 
 # Extract raw key bytes: private key = last 32 bytes of PKCS8 DER (seed) + public = last 32 bytes of SubjectPublicKeyInfo DER
-# Vela expects NaCl-style: private = 64 bytes (seed||pub), public = 32 bytes, both base64
-PRIV_SEED=$(openssl pkey -in "$TMP_KEY" -outform DER 2>/dev/null | tail -c 32 | base64 | tr -d '\n')
-PUB_BYTES=$(openssl pkey -in "$TMP_PUB" -pubin -outform DER 2>/dev/null | tail -c 32 | base64 | tr -d '\n')
-# NaCl private key = seed concatenated with public key (both 32 bytes = 64 bytes total)
-QUEUE_PRIVATE_KEY=$(printf '%s' "$PRIV_SEED$PUB_BYTES" | base64 | tr -d '\n')
-QUEUE_PUBLIC_KEY="$PUB_BYTES"
+# Vela expects NaCl-style: private = 64 raw bytes (seed||pub) base64-encoded, public = 32 raw bytes base64-encoded
+TMP_SEED=$(mktemp)
+TMP_PUB_RAW=$(mktemp)
+openssl pkey -in "$TMP_KEY" -outform DER 2>/dev/null | tail -c 32 > "$TMP_SEED"
+openssl pkey -in "$TMP_PUB" -pubin -outform DER 2>/dev/null | tail -c 32 > "$TMP_PUB_RAW"
+# NaCl private key = raw seed + raw pubkey (64 bytes total), then base64-encode
+QUEUE_PRIVATE_KEY=$(cat "$TMP_SEED" "$TMP_PUB_RAW" | base64 | tr -d '\n')
+QUEUE_PUBLIC_KEY=$(base64 < "$TMP_PUB_RAW" | tr -d '\n')
+rm -f "$TMP_SEED" "$TMP_PUB_RAW"
 rm -f "$TMP_KEY" "$TMP_PUB"
 
 # Build DATABASE_ADDR with the generated password
