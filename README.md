@@ -8,9 +8,9 @@ Runs on Docker Compose. Connects to GitHub via OAuth. Executes builds locally us
 
 | Container | Image | Purpose |
 |---|---|---|
-| `vela-server` | `ghcr.io/go-vela/server:v0.27.5` | API server, build scheduler |
-| `vela-worker` | `ghcr.io/go-vela/worker:v0.27.3` | Build executor (uses host Docker) |
-| `vela-ui` | `ghcr.io/go-vela/ui:v0.28.0` | Web interface |
+| `vela-server` | `target/vela-server:v0.27.3` | API server, build scheduler |
+| `vela-worker` | `target/vela-worker:v0.27.3` | Build executor (uses host Docker) |
+| `vela-ui` | `target/vela-ui:v0.27.3` | Web interface |
 | `vela-postgres` | `postgres:15-alpine` | Persistent storage |
 | `vela-redis` | `redis:7-alpine` | Build queue |
 
@@ -21,7 +21,8 @@ Runs on Docker Compose. Connects to GitHub via OAuth. Executes builds locally us
 bash scripts/gen-secrets.sh
 
 # 2. Create GitHub OAuth app → docs/github-oauth.md
-#    Then fill in SCM_CLIENT and SCM_SECRET in .env
+#    Create GitHub App → docs/github-app.md
+#    Fill in SCM_* values in .env
 
 # 3. Update URLs in .env
 
@@ -31,19 +32,15 @@ docker compose up -d
 
 Full instructions: **[docs/setup.md](docs/setup.md)**
 
-## Ports
+## Access
 
-| Port | Service |
-|---|---|
-| `3500` | Vela API server |
-| `3501` | Vela UI |
-
-Both are accessible via Tailscale. Port 3500 needs Tailscale Funnel for the GitHub OAuth callback — see [docs/github-oauth.md](docs/github-oauth.md).
+Served at `https://vela.prettybird.zapplebee.online` via Traefik reverse proxy with Let's Encrypt TLS.
 
 ## Docs
 
 - [Setup guide](docs/setup.md)
 - [GitHub OAuth app setup](docs/github-oauth.md)
+- [GitHub App setup](docs/github-app.md)
 - [Maintenance — updates, backups, troubleshooting](docs/maintenance.md)
 
 ## Writing pipelines
