@@ -34,6 +34,7 @@ services:
       VELA_ENABLE_SECURE_COOKIE: "true"
       VELA_REPO_ALLOWLIST: "*"
       VELA_SCHEDULE_ALLOWLIST: "*"
+      VELA_SCHEDULE_MINIMUM_FREQUENCY: 30m
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.vela-server.rule=Host(`vela.prettybird.zapplebee.online`) && (PathPrefix(`/api`) || PathPrefix(`/authenticate`) || PathPrefix(`/login`) || PathPrefix(`/logout`) || PathPrefix(`/health`) || PathPrefix(`/webhook`) || PathPrefix(`/_ws`) || PathPrefix(`/_services`) || PathPrefix(`/token-refresh`) || PathPrefix(`/validate-token`) || PathPrefix(`/validate-oauth`) || PathPrefix(`/metrics`) || PathPrefix(`/version`) || PathPrefix(`/badge`) || PathPrefix(`/status`))"
